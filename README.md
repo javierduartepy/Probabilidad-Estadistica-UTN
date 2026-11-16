@@ -28,4 +28,4 @@ tpi_estadistica_django/
     │       ├── unidad6.html
     │       └── unidad7.html
     ├── urls.py
-    └── views.py
+    └── views.py'''
