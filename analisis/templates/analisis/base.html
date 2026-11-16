@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estadística</title>
+    <title>TPI Estadística - UTN FRRe</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -27,7 +27,7 @@
             font-variant-numeric: tabular-nums;
             font-size: 0.86rem;
         }
-        /* Sidebar Vertical Izquierda (Solo navegación) */
+        /* Sidebar Vertical Izquierda */
         .sidebar {
             position: fixed;
             top: 0;
@@ -68,17 +68,16 @@
             background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
         }
-        /* Contenido principal con margen izquierdo para la sidebar */
         .main-content {
             margin-left: 240px;
             padding: 2rem;
             min-height: 100vh;
         }
-        /* Cabecera flotante superior derecha para Dataset y Subida */
         .top-right-bar {
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
             gap: 0.75rem;
             margin-bottom: 1.5rem;
             background: #ffffff;
@@ -97,14 +96,26 @@
             color: #ffffff !important;
             font-weight: 600;
             box-shadow: 0 2px 6px rgba(37, 99, 235, 0.28);
+            transition: all 0.2s ease;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 55%, #1e40af 100%) !important;
+            transform: translateY(-1px);
+        }
+        .panel-informe {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid #cbd5e1;
+            border-left: 5px solid #2563eb;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
         }
     </style>
 </head>
 <body>
-    <!-- Sidebar Vertical Izquierda (Exclusiva Navegación) -->
+    <!-- Sidebar Vertical Izquierda -->
     <nav class="sidebar shadow">
         <a class="navbar-brand" href="{% url 'dashboard' %}">
-            Estadística <br><span class="text-secondary fw-normal fs-7" style="font-size: 0.75rem;"></span>
+            Estadística <br><span class="text-secondary fw-normal" style="font-size: 0.75rem;">TPI - UTN FRRe</span>
         </a>
 
         <div>
@@ -124,25 +135,50 @@
 
     <!-- Contenido Principal -->
     <div class="main-content">
-        <!-- Barra Superior Derecha para Dataset Activo y Subida de Archivos -->
+        <!-- Barra Superior: Botón de Informe a la izquierda + Dataset y Subida a la derecha -->
         <div class="top-right-bar">
-            {% if datasets_disponibles %}
-            <form action="{% url 'seleccionar_dataset' %}" method="POST" class="d-flex align-items-center mb-0">
-                {% csrf_token %}
-                <span class="text-secondary small fw-semibold me-2">Activo:</span>
-                <select name="dataset_nombre" class="form-select form-select-sm" style="width: 220px;" onchange="this.form.submit()">
-                    {% for ds in datasets_disponibles %}
-                        <option value="{{ ds }}" {% if ds == dataset_activo %}selected{% endif %}>{{ ds }}</option>
-                    {% endfor %}
-                </select>
-            </form>
-            {% endif %}
+            <div>
+                {% if request.resolver_match.url_name != 'dashboard' and request.resolver_match.url_name != 'bienvenida' %}
+                <button type="button" id="btnGenerarInforme" class="btn btn-primary btn-sm px-3 py-2">
+                    Informe de Probabilidad
+                </button>
+                {% endif %}
+            </div>
 
-            <form action="{% url 'subir_dataset' %}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center mb-0 gap-2">
-                {% csrf_token %}
-                <input class="form-control form-control-sm" type="file" name="archivo_csv" accept=".csv,.xlsx,.xls" required style="width: 210px;">
-                <button class="btn btn-primary btn-sm text-nowrap" type="submit">Cargar Archivo</button>
-            </form>
+            <div class="d-flex align-items-center flex-wrap gap-2">
+                {% if datasets_disponibles %}
+                <form action="{% url 'seleccionar_dataset' %}" method="POST" class="d-flex align-items-center mb-0">
+                    {% csrf_token %}
+                    <span class="text-secondary small fw-semibold me-2">Activo:</span>
+                    <select name="dataset_nombre" class="form-select form-select-sm" style="width: 220px;" onchange="this.form.submit()">
+                        {% for ds in datasets_disponibles %}
+                            <option value="{{ ds }}" {% if ds == dataset_activo %}selected{% endif %}>{{ ds }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+                {% endif %}
+
+                <form action="{% url 'subir_dataset' %}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center mb-0 gap-2">
+                    {% csrf_token %}
+                    <input class="form-control form-control-sm" type="file" name="archivo_csv" accept=".csv,.xlsx,.xls" required style="width: 210px;">
+                    <button class="btn btn-primary btn-sm text-nowrap" type="submit">Cargar Archivo</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Panel Desplegable del Informe de Probabilidad y Resumen -->
+        <div id="contenedorInformeProbabilidad" class="panel-informe p-4 mb-4 d-none">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle mb-1">Interpretación Automática en Lenguaje Claro</span>
+                    <h4 class="h5 mb-0 text-dark" id="informeTitulo">Informe de Probabilidad y Resultados</h4>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" id="btnCopiarInforme" class="btn btn-outline-secondary btn-sm">Copiar texto</button>
+                    <button type="button" id="btnCerrarInforme" class="btn-close" aria-label="Cerrar"></button>
+                </div>
+            </div>
+            <div id="informeCuerpo" class="text-dark" style="line-height: 1.65; font-size: 0.95rem;"></div>
         </div>
 
         {% if messages %}
@@ -151,10 +187,127 @@
             {% endfor %}
         {% endif %}
         
-        {% block content %}{% endblock %}
+        <div id="zonaAnalisis">
+            {% block content %}{% endblock %}
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function() {
+            const btnInforme = document.getElementById('btnGenerarInforme');
+            const panel = document.getElementById('contenedorInformeProbabilidad');
+            const cuerpo = document.getElementById('informeCuerpo');
+            const tituloEl = document.getElementById('informeTitulo');
+            const btnCerrar = document.getElementById('btnCerrarInforme');
+            const btnCopiar = document.getElementById('btnCopiarInforme');
+
+            if (!btnInforme) return;
+
+            btnCerrar.addEventListener('click', () => panel.classList.add('d-none'));
+
+            btnCopiar.addEventListener('click', () => {
+                navigator.clipboard.writeText(cuerpo.innerText);
+                btnCopiar.textContent = '¡Copiado!';
+                setTimeout(() => btnCopiar.textContent = 'Copiar texto', 1800);
+            });
+
+            btnInforme.addEventListener('click', () => {
+                const zona = document.getElementById('zonaAnalisis');
+                const encabezado = zona.querySelector('h1, h2, h3');
+                const nombreModulo = encabezado ? encabezado.innerText.trim() : 'Módulo Actual';
+                const datasetActivo = "{{ dataset_activo|escapejs }}";
+
+                // 1. Detectar parámetros, rangos y filtros aplicados en el formulario de la vista
+                const parametrosAplicados = [];
+                zona.querySelectorAll('form select, form input').forEach(el => {
+                    if (el.type === 'hidden' || el.type === 'submit' || !el.name) return;
+                    let etiqueta = el.name;
+                    const labelEl = el.closest('div')?.querySelector('label');
+                    if (labelEl) etiqueta = labelEl.innerText.replace(':', '').trim();
+
+                    let valor = el.value;
+                    if (el.tagName === 'SELECT' && el.selectedIndex >= 0) {
+                        valor = el.options[el.selectedIndex].text.trim();
+                    }
+                    if (valor !== '') {
+                        parametrosAplicados.push(`<strong>${etiqueta}:</strong> ${valor}`);
+                    }
+                });
+
+                // 2. Extraer métricas y resultados reales calculados en las tablas y tarjetas de la vista
+                const hallazgos = [];
+                zona.querySelectorAll('table tbody tr').forEach(tr => {
+                    const celdas = Array.from(tr.querySelectorAll('td, th')).map(c => c.innerText.replace(/\s+/g, ' ').trim());
+                    if (celdas.length === 2 && celdas[0] && celdas[1]) {
+                        hallazgos.push(`• <strong>${celdas[0]}:</strong> ${celdas[1]}`);
+                    } else if (celdas.length === 3 && celdas[0] && celdas[1] && celdas[2]) {
+                        hallazgos.push(`• <strong>${celdas[0]}:</strong> Base = ${celdas[1]} | Contraste = ${celdas[2]}`);
+                    } else if (celdas.length === 1 && celdas[0].length > 8) {
+                        hallazgos.push(`• ${celdas[0]}`);
+                    }
+                });
+
+                // Capturar también alertas o diagnósticos destacados en la vista
+                zona.querySelectorAll('.alert, li.small').forEach(el => {
+                    const txt = el.innerText.replace(/\s+/g, ' ').trim();
+                    if (txt && txt.length > 15 && !hallazgos.some(h => h.includes(txt.slice(0, 30)))) {
+                        hallazgos.push(`• ${txt}`);
+                    }
+                });
+
+                // 3. Explicación contextual según la unidad o comparación activa
+                const ruta = window.location.pathname;
+                let explicacionProbabilidad = '';
+                if (ruta.includes('unidad-1')) {
+                    explicacionProbabilidad = 'Se auditó la calidad e integridad de los registros de la muestra activa, evaluando la proporción de datos completos frente a valores faltantes o inconsistentes antes de calcular probabilidades.';
+                } else if (ruta.includes('unidad-2')) {
+                    explicacionProbabilidad = 'Se resumió el comportamiento real de la muestra mediante medidas de posición (media, mediana) y dispersión (desvío estándar), permitiendo identificar dónde se concentra la mayoría de los casos.';
+                } else if (ruta.includes('unidad-3')) {
+                    explicacionProbabilidad = 'Se calculó la cantidad total de agrupaciones y arreglos posibles sobre los elementos seleccionados de la muestra, diferenciando cuándo importa el orden (permutaciones/variaciones) y cuándo no (combinaciones).';
+                } else if (ruta.includes('unidad-4')) {
+                    explicacionProbabilidad = 'Se aplicó probabilidad condicional y el Teorema de Bayes para medir cómo cambia la probabilidad de pertenecer a una categoría al conocer una característica previa dentro de la muestra.';
+                } else if (ruta.includes('unidad-5')) {
+                    explicacionProbabilidad = 'Se modeló el conteo de éxitos en ensayos discretos (Binomial / Hipergeométrica / Poisson) usando la tasa real observada en el dataset para estimar la probabilidad de ocurrencia de cada escenario.';
+                } else if (ruta.includes('unidad-6')) {
+                    explicacionProbabilidad = 'Mediante el Teorema Central del Límite (TCL), se verificó cómo el promedio de submuestras tiende a una distribución Normal alrededor de la media real, permitiendo calcular probabilidades acumuladas (Z).';
+                } else if (ruta.includes('unidad-7')) {
+                    explicacionProbabilidad = 'Se realizó inferencia estadística mediante intervalos de confianza y pruebas de hipótesis (valor p) para determinar si los resultados observados en la muestra son estadísticamente significativos o producto del azar.';
+                } else if (ruta.includes('comparar')) {
+                    explicacionProbabilidad = 'Se contrastaron dos muestras reales bajo exactamente el mismo rango de filtros, evaluando mediante pruebas de hipótesis (T-Test de Welch y Chi-cuadrado) si las diferencias observadas entre ambas poblaciones son reales o atribuibles al azar (nivel de significancia α = 0,05).';
+                } else {
+                    explicacionProbabilidad = 'Se analizaron los registros activos aplicando los criterios seleccionados en pantalla para obtener indicadores representativos de la muestra.';
+                }
+
+                // 4. Armar el informe legible para cualquier persona
+                tituloEl.textContent = `Informe de Probabilidad — ${nombreModulo}`;
+                const muestraTexto = ruta.includes('comparar')
+                    ? `Se utilizaron como muestras los datasets seleccionados en la comparativa (${parametrosAplicados.slice(0, 2).join(' y ') || datasetActivo}).`
+                    : `Se trabajó sobre la muestra activa del archivo <strong>${datasetActivo}</strong>.`;
+
+                const filtrosTexto = parametrosAplicados.length > 0
+                    ? `<p class="mb-2"><strong>1. Muestra y Rango Aplicado:</strong> ${muestraTexto} Los parámetros y filtros configurados para este cálculo fueron: ${parametrosAplicados.join(' | ')}.</p>`
+                    : `<p class="mb-2"><strong>1. Muestra Utilizada:</strong> ${muestraTexto} Se analizó la totalidad de los registros disponibles sin recortes adicionales.</p>`;
+
+                const resultadosTexto = hallazgos.length > 0
+                    ? `<div class="p-3 rounded bg-white border mb-2">
+                           <div class="fw-semibold text-primary mb-1">3. Resultados Concretos Obtenidos:</div>
+                           <div class="small" style="max-height: 220px; overflow-y: auto;">${hallazgos.slice(0, 12).join('<br>')}</div>
+                       </div>`
+                    : '';
+
+                cuerpo.innerHTML = `
+                    ${filtrosTexto}
+                    <p class="mb-2"><strong>2. Qué se calculó y cómo se interpreta:</strong> ${explicacionProbabilidad}</p>
+                    ${resultadosTexto}
+                    <p class="mb-0 text-secondary small"><em>Conclusión práctica:</em> Si un valor <strong>p</strong> obtenido es menor a <strong>0,05</strong>, existe evidencia estadística suficiente para afirmar que el efecto o diferencia es real en la población y no una casualidad de la muestra; si es mayor o igual a 0,05, las diferencias observadas entran dentro de la variación normal esperada.</p>
+                `;
+
+                panel.classList.remove('d-none');
+                panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            });
+        })();
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
