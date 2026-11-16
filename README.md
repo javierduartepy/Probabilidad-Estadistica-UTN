@@ -1,4 +1,4 @@
-'''text
+```text
 tpi_estadistica_django/
 ├── manage.py
 ├── requirements.txt
@@ -8,7 +8,7 @@ tpi_estadistica_django/
 └── analisis/
     ├── services/                  <-- Lógica pura de Python/Pandas por unidad
     │   ├── __init__.py
-    │   ├── data_loader.py         <-- Carga única y cache/sesión del CSV
+    │   ├── data_loader.py         <-- Carga única y caché/sesión del CSV
     │   ├── unidad1_auditoria.py   <-- TP 1: Estructuras nativas, nulos, duplicados, rangos
     │   ├── unidad2_descriptiva.py <-- TP 2: Posición, dispersión, asimetría, outliers, datos p/ gráficos
     │   ├── unidad3_combinatoria.py<-- TP 3: Permutaciones, variaciones y combinaciones sobre el dataset
@@ -28,4 +28,4 @@ tpi_estadistica_django/
     │       ├── unidad6.html
     │       └── unidad7.html
     ├── urls.py
-    └── views.py'''
+    └── views.py
