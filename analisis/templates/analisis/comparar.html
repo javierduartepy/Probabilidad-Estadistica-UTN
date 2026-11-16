@@ -1,148 +1,250 @@
 {% extends 'analisis/base.html' %}
+
 {% block content %}
 <div class="card shadow-sm p-4">
-    <h2 class="h4 text-primary mb-3">Comparación Entre Datasets (CABA vs Chaco)</h2>
-    <form method="GET" class="row g-3 bg-light p-3 rounded mb-4 border">
-        <div class="col-md-5">
-            <label class="form-label fw-bold">Dataset A (Base):</label>
-            <select name="ds_a" class="form-select">
-                {% for d in datasets_disponibles %}
-                    <option value="{{ d }}" {% if d == ds_a %}selected{% endif %}>{{ d }}</option>
-                {% endfor %}
-            </select>
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h2 class="h4 mb-0" style="color: #1e3a8a;">Comparación Interactiva Entre Datasets</h2>
+        {% if comp.metadatos_comunes %}
+            <span class="badge rounded-pill px-3 py-2" style="background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;">
+                Metadatos detectados: {{ comp.metadatos_comunes|join:" | " }}
+            </span>
+        {% endif %}
+    </div>
+
+    <form method="GET" class="p-3 rounded-3 mb-4 border" style="background-color: #f8fafc;">
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small text-secondary mb-1">Dataset A (Base):</label>
+                <select name="ds_a" class="form-select form-select-sm">
+                    {% for d in datasets_disponibles %}
+                        <option value="{{ d }}" {% if d == ds_a %}selected{% endif %}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small text-secondary mb-1">Dataset B (Contraste):</label>
+                <select name="ds_b" class="form-select form-select-sm">
+                    {% for d in datasets_disponibles %}
+                        <option value="{{ d }}" {% if d == ds_b %}selected{% endif %}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
-        <div class="col-md-5">
-            <label class="form-label fw-bold">Dataset B (Contraste):</label>
-            <select name="ds_b" class="form-select">
-                {% for d in datasets_disponibles %}
-                    <option value="{{ d }}" {% if d == ds_b %}selected{% endif %}>{{ d }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-2 d-flex align-items-end">
-            <button type="submit" class="btn btn-dark w-100">Comparar</button>
+
+        <div class="row g-2 align-items-end">
+            <div class="col-6 col-md-2">
+                <label class="form-label fw-semibold small text-secondary mb-1">Edad Mínima:</label>
+                <input type="number" name="edad_min" class="form-control form-control-sm"
+                       value="{{ edad_min_sel }}" min="0" max="120">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label fw-semibold small text-secondary mb-1">Edad Máxima:</label>
+                <input type="number" name="edad_max" class="form-control form-control-sm"
+                       value="{{ edad_max_sel }}" min="0" max="120">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label fw-semibold small text-secondary mb-1">Sexo / Género:</label>
+                <select name="sexo" class="form-select form-select-sm">
+                    <option value="AMBOS" {% if sexo_sel == 'AMBOS' %}selected{% endif %}>Ambos (F y M)</option>
+                    {% for s in comp.sexos_disponibles %}
+                        <option value="{{ s }}" {% if sexo_sel == s %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label fw-semibold small text-secondary mb-1">Variable a Graficar:</label>
+                <select name="metrica_graf" class="form-select form-select-sm">
+                    <option value="tramos_edad" {% if metrica_graf == 'tramos_edad' %}selected{% endif %}>Porcentaje por Edad (%)</option>
+                    <option value="edad_cant" {% if metrica_graf == 'edad_cant' %}selected{% endif %}>Cantidad por Edad (N)</option>
+                    <option value="sexo" {% if metrica_graf == 'sexo' %}selected{% endif %}>Distribución Sexo (%)</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label fw-semibold small text-secondary mb-1">Tipo de Gráfico:</label>
+                <select name="tipo_graf" class="form-select form-select-sm">
+                    <option value="bar" {% if tipo_graf == 'bar' %}selected{% endif %}>Barras Agrupadas</option>
+                    <option value="horizontalBar" {% if tipo_graf == 'horizontalBar' %}selected{% endif %}>Barras Horizontales</option>
+                    <option value="line" {% if tipo_graf == 'line' %}selected{% endif %}>Líneas Comparativas</option>
+                    <option value="radar" {% if tipo_graf == 'radar' %}selected{% endif %}>Radar / Telaraña</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100">Aplicar y Graficar</button>
+            </div>
         </div>
     </form>
 
     {% if comp %}
-    <div class="row g-4">
-        <!-- Tabla 1: Estructura y Calidad -->
-        <div class="col-lg-6">
-            <div class="card h-100 border-0 bg-light p-3">
-                <h5 class="mb-3">Estructura y Calidad</h5>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-sm bg-white align-middle mb-0" style="table-layout: fixed;">
-                        <thead class="table-dark">
-                            <tr>
-                                <th style="width: 32%;">Métrica</th>
-                                <th style="width: 34%;" class="text-break small">{{ comp.nombre_a }}</th>
-                                <th style="width: 34%;" class="text-break small">{{ comp.nombre_b }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="fw-semibold">Registros (N)</td>
-                                <td>{{ comp.filas_a }}</td>
-                                <td>{{ comp.filas_b }}</td>
-                            </tr>
-                            <tr>
-                                <td class="fw-semibold">Variables</td>
-                                <td>{{ comp.cols_a }}</td>
-                                <td>{{ comp.cols_b }}</td>
-                            </tr>
-                            <tr>
-                                <td class="fw-semibold">Celdas Nulas</td>
-                                <td>{{ comp.nulos_a }}</td>
-                                <td>{{ comp.nulos_b }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tabla 2: Contraste Etario -->
-        {% if comp.edad %}
-        <div class="col-lg-6">
-            <div class="card h-100 border-0 bg-light p-3">
-                <h5 class="mb-3">Contraste Etario (T-Test de Welch)</h5>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-sm bg-white align-middle mb-0" style="table-layout: fixed;">
-                        <thead class="table-dark">
-                            <tr>
-                                <th style="width: 32%;">Indicador</th>
-                                <th style="width: 34%;" class="text-break small">{{ comp.nombre_a }}</th>
-                                <th style="width: 34%;" class="text-break small">{{ comp.nombre_b }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="fw-semibold">Media / Mediana</td>
-                                <td>{{ comp.edad.media_a }} / {{ comp.edad.mediana_a }}</td>
-                                <td>{{ comp.edad.media_b }} / {{ comp.edad.mediana_b }}</td>
-                            </tr>
-                            <tr>
-                                <td class="fw-semibold">Desvío Estándar</td>
-                                <td>{{ comp.edad.std_a }}</td>
-                                <td>{{ comp.edad.std_b }}</td>
-                            </tr>
-                            <tr class="table-info">
-                                <td colspan="3" class="small">
-                                    <strong>Estadístico t:</strong> {{ comp.edad.t_stat }} | 
-                                    <strong>P-valor:</strong> {{ comp.edad.p_valor }} <br>
-                                    <span class="text-dark">
-                                        {% if comp.edad.diferencia_sig %}
-                                            Conclusión: Existe diferencia estadísticamente significativa entre ambas poblaciones (p &lt; 0.05).
-                                        {% else %}
-                                            Conclusión: No hay diferencia estadísticamente significativa entre las medias etarias (p &ge; 0.05).
-                                        {% endif %}
-                                    </span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        {% if comp.insights %}
+        <div class="p-3 rounded-3 mb-4" style="background: linear-gradient(90deg, #eff6ff 0%, #f8fafc 100%); border-left: 4px solid #2563eb; border-top: 1px solid #dbeafe; border-right: 1px solid #dbeafe; border-bottom: 1px solid #dbeafe;">
+            <h6 class="fw-bold mb-2" style="color: #1e40af;">Diagnóstico Estadístico del Segmento Seleccionado:</h6>
+            <ul class="mb-0 ps-3" style="color: #1e293b;">
+                {% for item in comp.insights %}
+                    <li class="small">{{ item }}</li>
+                {% endfor %}
+            </ul>
         </div>
         {% endif %}
 
-        <!-- Gráfico Comparativo de Género -->
-        {% if comp.sexo %}
-        <div class="col-12">
-            <div class="card border-0 bg-light p-3">
-                <h5 class="mb-3">Distribución Porcentual por Género (%)</h5>
-                <div style="max-height: 260px;">
-                    <canvas id="chartCompSexo"></canvas>
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card h-100 border bg-white p-3 shadow-sm">
+                    <h5 class="h6 fw-bold mb-3 text-dark">Estructura y Submuestra Activa</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm bg-white align-middle mb-0" style="table-layout: fixed;">
+                            <thead style="background-color: #1e293b; color: #f8fafc;">
+                                <tr>
+                                    <th style="width: 34%;">Métrica</th>
+                                    <th style="width: 33%;" class="text-break small">{{ comp.nombre_a }}</th>
+                                    <th style="width: 33%;" class="text-break small">{{ comp.nombre_b }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="fw-semibold">Registros en Rango / Total</td>
+                                    <td><strong>{{ comp.filas_a }}</strong> / {{ comp.filas_orig_a }}</td>
+                                    <td><strong>{{ comp.filas_b }}</strong> / {{ comp.filas_orig_b }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-semibold">Variables</td>
+                                    <td>{{ comp.cols_a }}</td>
+                                    <td>{{ comp.cols_b }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-semibold">Celdas Nulas (Dataset)</td>
+                                    <td>{{ comp.nulos_a }}</td>
+                                    <td>{{ comp.nulos_b }}</td>
+                                </tr>
+                                {% if comp.chi2_sexo %}
+                                <tr style="background-color: #f1f5f9;">
+                                    <td colspan="3" class="small text-dark">
+                                        <strong>Prueba Chi² Género vs Jurisdicción:</strong> {{ comp.chi2_sexo.chi2 }} (p = {{ comp.chi2_sexo.p_valor }})
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {% if comp.edad %}
+            <div class="col-lg-6">
+                <div class="card h-100 border bg-white p-3 shadow-sm">
+                    <h5 class="h6 fw-bold mb-3 text-dark">Contraste Etario (T-Test de Welch)</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm bg-white align-middle mb-0" style="table-layout: fixed;">
+                            <thead style="background-color: #1e293b; color: #f8fafc;">
+                                <tr>
+                                    <th style="width: 34%;">Indicador</th>
+                                    <th style="width: 33%;" class="text-break small">{{ comp.nombre_a }}</th>
+                                    <th style="width: 33%;" class="text-break small">{{ comp.nombre_b }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="fw-semibold">Media / Mediana</td>
+                                    <td>{{ comp.edad.media_a }} / {{ comp.edad.mediana_a }}</td>
+                                    <td>{{ comp.edad.media_b }} / {{ comp.edad.mediana_b }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-semibold">Desvío Estándar</td>
+                                    <td>{{ comp.edad.std_a }}</td>
+                                    <td>{{ comp.edad.std_b }}</td>
+                                </tr>
+                                <tr style="background-color: #eff6ff;">
+                                    <td colspan="3" class="small" style="color: #1e3a8a;">
+                                        <strong>Estadístico t:</strong> {{ comp.edad.t_stat }} | 
+                                        <strong>P-valor:</strong> {{ comp.edad.p_valor }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="col-12">
+                <div class="card border bg-white p-3 shadow-sm">
+                    <h5 class="h6 fw-bold mb-3 text-dark">
+                        Gráfico Comparativo: 
+                        {% if metrica_graf == 'sexo' %}Distribución por Género (% válidos)
+                        {% elif metrica_graf == 'edad_cant' %}Cantidad Exacta por Edad (N)
+                        {% else %}Distribución por Edad (%){% endif %}
+                    </h5>
+                    <div style="height: 310px;">
+                        <canvas id="chartComparativoDinamico"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
+
         <script>
-            new Chart(document.getElementById('chartCompSexo').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: {{ comp.sexo.categorias|safe }},
-                    datasets: [
-                        {
-                            label: '{{ comp.nombre_a }} (%)',
-                            data: {{ comp.sexo.pct_a|safe }},
-                            backgroundColor: 'rgba(13, 110, 253, 0.7)'
-                        },
-                        {
-                            label: '{{ comp.nombre_b }} (%)',
-                            data: {{ comp.sexo.pct_b|safe }},
-                            backgroundColor: 'rgba(25, 135, 84, 0.7)'
+            (function() {
+                const tipoSeleccionado = "{{ tipo_graf }}";
+                let labels = [];
+                let dataA = [];
+                let dataB = [];
+                let sufijo = " (%)";
+
+                {% if metrica_graf == 'sexo' and comp.sexo %}
+                    labels = {{ comp.sexo.categorias|safe }};
+                    dataA = {{ comp.sexo.pct_a|safe }};
+                    dataB = {{ comp.sexo.pct_b|safe }};
+                {% elif metrica_graf == 'edad_cant' and comp.tramos_edad %}
+                    labels = {{ comp.tramos_edad.labels|safe }};
+                    dataA = {{ comp.tramos_edad.cnt_a|safe }};
+                    dataB = {{ comp.tramos_edad.cnt_b|safe }};
+                    sufijo = " (Cant.)";
+                {% elif comp.tramos_edad %}
+                    labels = {{ comp.tramos_edad.labels|safe }};
+                    dataA = {{ comp.tramos_edad.pct_a|safe }};
+                    dataB = {{ comp.tramos_edad.pct_b|safe }};
+                {% endif %}
+
+                const isHorizontal = tipoSeleccionado === 'horizontalBar';
+                const chartType = isHorizontal ? 'bar' : tipoSeleccionado;
+
+                new Chart(document.getElementById('chartComparativoDinamico').getContext('2d'), {
+                    type: chartType,
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: '{{ comp.nombre_a }}' + sufijo,
+                                data: dataA,
+                                backgroundColor: 'rgba(37, 99, 235, 0.72)',
+                                borderColor: 'rgba(29, 78, 216, 1)',
+                                borderWidth: 2,
+                                borderRadius: 4,
+                                tension: 0.3,
+                                fill: chartType === 'radar'
+                            },
+                            {
+                                label: '{{ comp.nombre_b }}' + sufijo,
+                                data: dataB,
+                                backgroundColor: 'rgba(13, 148, 136, 0.72)',
+                                borderColor: 'rgba(15, 118, 110, 1)',
+                                borderWidth: 2,
+                                borderRadius: 4,
+                                tension: 0.3,
+                                fill: chartType === 'radar'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: isHorizontal ? 'y' : 'x',
+                        scales: chartType === 'radar' ? {} : {
+                            x: { beginAtZero: true },
+                            y: { beginAtZero: true }
                         }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true, max: 100 } }
-                }
-            });
+                    }
+                });
+            })();
         </script>
-        {% endif %}
-    </div>
     {% endif %}
 </div>
 {% endblock %}

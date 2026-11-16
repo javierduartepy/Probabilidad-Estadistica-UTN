@@ -91,7 +91,33 @@ def vista_comparar(request):
     disponibles = ctx['datasets_disponibles']
     ds_a = request.GET.get('ds_a', disponibles[0] if len(disponibles) > 0 else '')
     ds_b = request.GET.get('ds_b', disponibles[1] if len(disponibles) > 1 else ds_a)
-    ctx['ds_a'] = ds_a
-    ctx['ds_b'] = ds_b
-    ctx['comp'] = comparar_datasets(ds_a, ds_b) if ds_a and ds_b else None
+
+    edad_min_raw = request.GET.get('edad_min', '')
+    edad_max_raw = request.GET.get('edad_max', '')
+    sexo_sel = request.GET.get('sexo', 'AMBOS')
+    metrica_graf = request.GET.get('metrica_graf', 'tramos_edad')
+    tipo_graf = request.GET.get('tipo_graf', 'bar')
+
+    filtros_comp = {
+        'edad_min': int(edad_min_raw) if edad_min_raw.isdigit() else None,
+        'edad_max': int(edad_max_raw) if edad_max_raw.isdigit() else None,
+        'sexo': sexo_sel,
+    }
+
+    comp = comparar_datasets(ds_a, ds_b, filtros_comp) if ds_a and ds_b else None
+
+    ctx.update({
+        'ds_a': ds_a,
+        'ds_b': ds_b,
+        'edad_min_sel': edad_min_raw if edad_min_raw else (comp['edad_min_global'] if comp else 18),
+        'edad_max_sel': edad_max_raw if edad_max_raw else (comp['edad_max_global'] if comp else 90),
+        'sexo_sel': sexo_sel,
+        'metrica_graf': metrica_graf,
+        'tipo_graf': tipo_graf,
+        'comp': comp,
+    })
     return render(request, 'analisis/comparar.html', ctx)
+
+def vista_bienvenida(request):
+    _, ctx = _contexto_base(request)
+    return render(request, 'analisis/bienvenida.html', ctx)

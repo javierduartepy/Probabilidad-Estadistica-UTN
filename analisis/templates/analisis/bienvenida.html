@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIENVENIDO - TPI Estadística UTN</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Special+Elite&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0b0d11;
+            color: #e5e7eb;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+        #canvas-nodes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        .hero-container {
+            position: relative;
+            z-index: 2;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+            pointer-events: none;
+        }
+        .hero-content {
+            background: rgba(15, 18, 24, 0.72);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(156, 163, 175, 0.22);
+            padding: 3.2rem 4rem;
+            border-radius: 12px;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.75);
+            max-width: 720px;
+            pointer-events: auto;
+        }
+        .titulo-maquina {
+            font-family: 'Special Elite', 'Courier New', monospace;
+            font-size: clamp(3rem, 6vw, 4.8rem);
+            letter-spacing: 0.14em;
+            color: #f3f4f6;
+            margin-bottom: 0.75rem;
+            text-shadow: 0 2px 12px rgba(255, 255, 255, 0.12);
+        }
+        .subtitulo {
+            color: #9ca3af;
+            font-size: 0.95rem;
+            margin-bottom: 2.2rem;
+            line-height: 1.6;
+        }
+        .btn-ingresar {
+            font-family: 'Special Elite', 'Courier New', monospace;
+            font-size: 1.25rem;
+            letter-spacing: 0.1em;
+            background: #e5e7eb;
+            color: #111827;
+            padding: 0.85rem 3rem;
+            border-radius: 6px;
+            border: 1px solid #9ca3af;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .btn-ingresar:hover {
+            background: #ffffff;
+            color: #000000;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 255, 255, 0.18);
+        }
+        .hint-cursor {
+            margin-top: 1.25rem;
+            font-size: 0.75rem;
+            color: #6b7280;
+            letter-spacing: 0.04em;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas-nodes"></canvas>
+
+    <div class="hero-container">
+        <div class="hero-content">
+            <h1 class="titulo-maquina">BIENVENIDO</h1>
+            <p class="subtitulo">
+                Sistema de Análisis Estadístico — UTN FRRe<br>
+                Exploración demográfica, contrastes de hipótesis y auditoría de datos.
+            </p>
+            <a href="{% url 'dashboard' %}" class="btn-ingresar" id="btnIngresar">INGRESAR</a>
+            <div class="hint-cursor"></div>
+        </div>
+    </div>
+
+    <script>
+        // 1. SONIDO TIPO MOTOR DE ENTRADA (Web Audio API - Sin archivos externos)
+        let audioCtx = null;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function sonidoMotorHover() {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(55, now);
+                osc.frequency.exponentialRampToValueAtTime(95, now + 0.18);
+
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(180, now);
+
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } catch (e) {}
+        }
+
+        function sonidoMotorArranque(callback) {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+
+                // Oscilador principal grave (bloque motor)
+                const osc1 = audioCtx.createOscillator();
+                // Sub-armónico (vibración profunda)
+                const osc2 = audioCtx.createOscillator();
+                const filter = audioCtx.createBiquadFilter();
+                const gain = audioCtx.createGain();
+
+                osc1.type = 'sawtooth';
+                osc2.type = 'triangle';
+
+                // Arranque desde ralentí (42 Hz) acelerando (165 Hz)
+                osc1.frequency.setValueAtTime(42, now);
+                osc1.frequency.exponentialRampToValueAtTime(165, now + 0.55);
+
+                osc2.frequency.setValueAtTime(28, now);
+                osc2.frequency.exponentialRampToValueAtTime(110, now + 0.55);
+
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(140, now);
+                filter.frequency.exponentialRampToValueAtTime(520, now + 0.55);
+
+                gain.gain.setValueAtTime(0.01, now);
+                gain.gain.linearRampToValueAtTime(0.16, now + 0.12);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+
+                osc1.connect(filter);
+                osc2.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc1.start(now);
+                osc2.start(now);
+                osc1.stop(now + 0.62);
+                osc2.stop(now + 0.62);
+            } catch (e) {}
+
+            setTimeout(callback, 560);
+        }
+
+        const btnIngresar = document.getElementById('btnIngresar');
+        btnIngresar.addEventListener('mouseenter', sonidoMotorHover);
+        btnIngresar.addEventListener('click', function(e) {
+            e.preventDefault();
+            const destino = this.href;
+            sonidoMotorArranque(() => {
+                window.location.href = destino;
+            });
+        });
+
+        // 2. CANVAS CON ~1000 NODOS NEUTROS QUE FORMAN SILUETAS DE HOMBRE, MUJER Y GRÁFICOS ESTADÍSTICOS
+        const canvas = document.getElementById('canvas-nodes');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        const TOTAL_NODOS = 1000;
+        let nodes = [];
+        let mouse = { x: -9999, y: -9999, active: false };
+
+        function generarPuntosObjetivo() {
+            const targets = [];
+
+            // A) Silueta Hombre (Izquierda, ~320 nodos)
+            const hx = width * 0.16;
+            const hy = height * 0.52;
+            const scale = Math.min(width, height) * 0.0032;
+
+            for (let i = 0; i < 320; i++) {
+                const parte = Math.random();
+                let px = 0, py = 0;
+                if (parte < 0.15) {
+                    // Cabeza
+                    const ang = Math.random() * Math.PI * 2;
+                    const r = Math.sqrt(Math.random()) * 16;
+                    px = Math.cos(ang) * r;
+                    py = -85 + Math.sin(ang) * r;
+                } else if (parte < 0.55) {
+                    // Torso ancho rectangular (hombros masculinos)
+                    px = (Math.random() - 0.5) * 52;
+                    py = -62 + Math.random() * 75;
+                } else if (parte < 0.72) {
+                    // Brazos
+                    const lado = Math.random() < 0.5 ? -1 : 1;
+                    px = lado * (30 + Math.random() * 10);
+                    py = -58 + Math.random() * 68;
+                } else {
+                    // Piernas
+                    const pierna = Math.random() < 0.5 ? -1 : 1;
+                    px = pierna * (11 + Math.random() * 9);
+                    py = 13 + Math.random() * 78;
+                }
+                targets.push({ x: hx + px * scale, y: hy + py * scale, group: 'hombre' });
+            }
+
+            // B) Silueta Mujer (Derecha, ~320 nodos)
+            const mx = width * 0.84;
+            const my = height * 0.52;
+
+            for (let i = 0; i < 320; i++) {
+                const parte = Math.random();
+                let px = 0, py = 0;
+                if (parte < 0.16) {
+                    // Cabeza + cabello
+                    const ang = Math.random() * Math.PI * 2;
+                    const r = Math.sqrt(Math.random()) * 17;
+                    px = Math.cos(ang) * r;
+                    py = -85 + Math.sin(ang) * r;
+                } else if (parte < 0.36) {
+                    // Torso superior estilizado
+                    px = (Math.random() - 0.5) * 34;
+                    py = -62 + Math.random() * 36;
+                } else if (parte < 0.68) {
+                    // Vestido / falda acampanada
+                    const t = Math.random();
+                    const ancho = 18 + t * 34;
+                    px = (Math.random() - 0.5) * ancho * 2;
+                    py = -26 + t * 56;
+                } else if (parte < 0.80) {
+                    // Brazos
+                    const lado = Math.random() < 0.5 ? -1 : 1;
+                    px = lado * (21 + Math.random() * 9);
+                    py = -58 + Math.random() * 54;
+                } else {
+                    // Piernas
+                    const pierna = Math.random() < 0.5 ? -1 : 1;
+                    px = pierna * (9 + Math.random() * 7);
+                    py = 30 + Math.random() * 60;
+                }
+                targets.push({ x: mx + px * scale, y: my + py * scale, group: 'mujer' });
+            }
+
+            // C) Gráficos Estadísticos de Fondo (Barras + Curva Normal/Tendencia, ~360 nodos)
+            const chartLeft = width * 0.28;
+            const chartRight = width * 0.72;
+            const chartBottom = height * 0.86;
+            const barras = [0.35, 0.62, 0.85, 0.54, 0.92, 0.68, 0.44];
+            const barW = (chartRight - chartLeft) / barras.length;
+
+            for (let i = 0; i < 360; i++) {
+                if (i < 240) {
+                    // Nodos formando columnas de histograma
+                    const bIdx = i % barras.length;
+                    const bx = chartLeft + bIdx * barW + barW * 0.18 + Math.random() * (barW * 0.64);
+                    const bh = barras[bIdx] * (height * 0.24);
+                    const by = chartBottom - Math.random() * bh;
+                    targets.push({ x: bx, y: by, group: 'grafico' });
+                } else {
+                    // Nodos formando curva de tendencia / distribución superior
+                    const t = (i - 240) / 120;
+                    const cx = chartLeft + t * (chartRight - chartLeft);
+                    const gauss = Math.exp(-Math.pow((t - 0.5) * 3.2, 2));
+                    const cy = height * 0.22 - gauss * (height * 0.11) + (Math.random() - 0.5) * 8;
+                    targets.push({ x: cx, y: cy, group: 'grafico' });
+                }
+            }
+
+            return targets;
+        }
+
+        function initNodes() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            const targets = generarPuntosObjetivo();
+            nodes = [];
+
+            const tonosNeutros = ['#6b7280', '#9ca3af', '#d1d5db', '#4b5563', '#e5e7eb'];
+
+            for (let i = 0; i < TOTAL_NODOS; i++) {
+                const tgt = targets[i % targets.length];
+                nodes.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    vx: (Math.random() - 0.5) * 1.1,
+                    vy: (Math.random() - 0.5) * 1.1,
+                    tx: tgt.x,
+                    ty: tgt.y,
+                    group: tgt.group,
+                    size: Math.random() * 1.6 + 0.9,
+                    color: tonosNeutros[i % tonosNeutros.length]
+                });
+            }
+        }
+
+        window.addEventListener('resize', initNodes);
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            mouse.active = true;
+        });
+        window.addEventListener('mouseleave', () => {
+            mouse.active = false;
+        });
+
+        initNodes();
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            for (let i = 0; i < nodes.length; i++) {
+                const n = nodes[i];
+
+                // Distancia del cursor al objetivo de la figura o al nodo
+                const dxMouseTgt = mouse.x - n.tx;
+                const dyMouseTgt = mouse.y - n.ty;
+                const distMouseTgt = Math.sqrt(dxMouseTgt * dxMouseTgt + dyMouseTgt * dyMouseTgt);
+
+                const dxMouseNode = mouse.x - n.x;
+                const dyMouseNode = mouse.y - n.y;
+                const distMouseNode = Math.sqrt(dxMouseNode * dxMouseNode + dyMouseNode * dyMouseNode);
+
+                // Al pasar el cursor cerca de una zona, los nodos se ensamblan en la figura (hombre, mujer o gráfico)
+                const radioActivacion = 260;
+                if (mouse.active && (distMouseTgt < radioActivacion || distMouseNode < radioActivacion)) {
+                    n.x += (n.tx - n.x) * 0.085;
+                    n.y += (n.ty - n.y) * 0.085;
+                } else {
+                    // Flotación libre en estado de reposo
+                    n.x += n.vx;
+                    n.y += n.vy;
+                    if (n.x < 0 || n.x > width) n.vx *= -1;
+                    if (n.y < 0 || n.y > height) n.vy *= -1;
+                }
+
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, n.size, 0, Math.PI * 2);
+                ctx.fillStyle = n.color;
+                ctx.fill();
+            }
+
+            // Conectar nodos cercanos cuando están formando figuras para dar efecto malla
+            ctx.lineWidth = 0.45;
+            for (let i = 0; i < nodes.length; i += 2) {
+                const a = nodes[i];
+                for (let j = i + 1; j < i + 16 && j < nodes.length; j++) {
+                    const b = nodes[j];
+                    if (a.group !== b.group) continue;
+                    const dx = a.x - b.x;
+                    const dy = a.y - b.y;
+                    const d = dx * dx + dy * dy;
+                    if (d < 900) {
+                        ctx.beginPath();
+                        ctx.moveTo(a.x, a.y);
+                        ctx.lineTo(b.x, b.y);
+                        ctx.strokeStyle = 'rgba(156, 163, 175, 0.22)';
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
