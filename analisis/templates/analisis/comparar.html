@@ -1,0 +1,148 @@
+{% extends 'analisis/base.html' %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="h4 text-primary mb-3">Comparación Entre Datasets (CABA vs Chaco)</h2>
+    <form method="GET" class="row g-3 bg-light p-3 rounded mb-4 border">
+        <div class="col-md-5">
+            <label class="form-label fw-bold">Dataset A (Base):</label>
+            <select name="ds_a" class="form-select">
+                {% for d in datasets_disponibles %}
+                    <option value="{{ d }}" {% if d == ds_a %}selected{% endif %}>{{ d }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-5">
+            <label class="form-label fw-bold">Dataset B (Contraste):</label>
+            <select name="ds_b" class="form-select">
+                {% for d in datasets_disponibles %}
+                    <option value="{{ d }}" {% if d == ds_b %}selected{% endif %}>{{ d }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-dark w-100">Comparar</button>
+        </div>
+    </form>
+
+    {% if comp %}
+    <div class="row g-4">
+        <!-- Tabla 1: Estructura y Calidad -->
+        <div class="col-lg-6">
+            <div class="card h-100 border-0 bg-light p-3">
+                <h5 class="mb-3">Estructura y Calidad</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm bg-white align-middle mb-0" style="table-layout: fixed;">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 32%;">Métrica</th>
+                                <th style="width: 34%;" class="text-break small">{{ comp.nombre_a }}</th>
+                                <th style="width: 34%;" class="text-break small">{{ comp.nombre_b }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="fw-semibold">Registros (N)</td>
+                                <td>{{ comp.filas_a }}</td>
+                                <td>{{ comp.filas_b }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-semibold">Variables</td>
+                                <td>{{ comp.cols_a }}</td>
+                                <td>{{ comp.cols_b }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-semibold">Celdas Nulas</td>
+                                <td>{{ comp.nulos_a }}</td>
+                                <td>{{ comp.nulos_b }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla 2: Contraste Etario -->
+        {% if comp.edad %}
+        <div class="col-lg-6">
+            <div class="card h-100 border-0 bg-light p-3">
+                <h5 class="mb-3">Contraste Etario (T-Test de Welch)</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm bg-white align-middle mb-0" style="table-layout: fixed;">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 32%;">Indicador</th>
+                                <th style="width: 34%;" class="text-break small">{{ comp.nombre_a }}</th>
+                                <th style="width: 34%;" class="text-break small">{{ comp.nombre_b }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="fw-semibold">Media / Mediana</td>
+                                <td>{{ comp.edad.media_a }} / {{ comp.edad.mediana_a }}</td>
+                                <td>{{ comp.edad.media_b }} / {{ comp.edad.mediana_b }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-semibold">Desvío Estándar</td>
+                                <td>{{ comp.edad.std_a }}</td>
+                                <td>{{ comp.edad.std_b }}</td>
+                            </tr>
+                            <tr class="table-info">
+                                <td colspan="3" class="small">
+                                    <strong>Estadístico t:</strong> {{ comp.edad.t_stat }} | 
+                                    <strong>P-valor:</strong> {{ comp.edad.p_valor }} <br>
+                                    <span class="text-dark">
+                                        {% if comp.edad.diferencia_sig %}
+                                            Conclusión: Existe diferencia estadísticamente significativa entre ambas poblaciones (p &lt; 0.05).
+                                        {% else %}
+                                            Conclusión: No hay diferencia estadísticamente significativa entre las medias etarias (p &ge; 0.05).
+                                        {% endif %}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Gráfico Comparativo de Género -->
+        {% if comp.sexo %}
+        <div class="col-12">
+            <div class="card border-0 bg-light p-3">
+                <h5 class="mb-3">Distribución Porcentual por Género (%)</h5>
+                <div style="max-height: 260px;">
+                    <canvas id="chartCompSexo"></canvas>
+                </div>
+            </div>
+        </div>
+        <script>
+            new Chart(document.getElementById('chartCompSexo').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: {{ comp.sexo.categorias|safe }},
+                    datasets: [
+                        {
+                            label: '{{ comp.nombre_a }} (%)',
+                            data: {{ comp.sexo.pct_a|safe }},
+                            backgroundColor: 'rgba(13, 110, 253, 0.7)'
+                        },
+                        {
+                            label: '{{ comp.nombre_b }} (%)',
+                            data: {{ comp.sexo.pct_b|safe }},
+                            backgroundColor: 'rgba(25, 135, 84, 0.7)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, max: 100 } }
+                }
+            });
+        </script>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

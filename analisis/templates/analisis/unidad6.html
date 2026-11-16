@@ -1,0 +1,44 @@
+{% extends 'analisis/base.html' %}
+{% include 'analisis/includes/barra_filtros.html' %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="h4 text-primary">Unidad 6: Distribuciones Continuas y Teorema Central del Límite (TCL)</h2>
+    <p class="text-muted">Simulación de muestreo repetido (10.000 iteraciones) para visualizar la convergencia a la campana normal.</p>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="alert alert-info">
+                <strong>Población Base ({{ data.col_sel }}):</strong> Media Poblacional ($\mu$): {{ data.mu_pob }} | Desvío Poblacional ($\sigma$): {{ data.sigma_pob }}
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for key, tcl in data.tcl.items %}
+        <div class="col-md-4 mb-3">
+            <div class="card p-3 h-100 shadow-sm">
+                <h5 class="text-center">Tamaño de Muestra: n = {{ tcl.n }}</h5>
+                <p class="small text-muted mb-1">Media de medias: {{ tcl.media_sim }} | Error Estándar (Teórico): {{ tcl.ee_teorico }}</p>
+                <canvas id="chartTcl_{{ tcl.n }}" height="180"></canvas>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    {% for key, tcl in data.tcl.items %}
+    new Chart(document.getElementById('chartTcl_{{ tcl.n }}').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: {{ tcl.labels|safe }},
+            datasets: [
+                { label: 'Densidad Medias Muestrales', data: {{ tcl.hist_density|safe }}, borderColor: 'rgba(75, 192, 192, 1)', backgroundColor: 'rgba(75, 192, 192, 0.2)', fill: true, tension: 0.3 },
+                { label: 'Curva Normal Teórica (TCL)', data: {{ tcl.normal_pdf|safe }}, borderColor: 'rgba(255, 99, 132, 1)', borderDash: [5, 5], pointRadius: 0 }
+            ]
+        },
+        options: { responsive: true, scales: { x: { display: false }, y: { beginAtZero: true } } }
+    });
+    {% endfor %}
+</script>
+{% endblock %}

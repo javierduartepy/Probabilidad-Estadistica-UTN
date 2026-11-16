@@ -1,0 +1,71 @@
+{% extends 'analisis/base.html' %}
+{% include 'analisis/includes/barra_filtros.html' %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="h4 text-primary">Unidad 2: Estadística Descriptiva y Distribuciones Empíricas</h2>
+    <p class="text-muted">Cálculo de posición, dispersión, asimetría, outliers y gráficos interactivos.</p>
+
+    <!-- Filtros Interactivos por Variable -->
+    <form method="GET" class="row g-3 bg-light p-3 rounded mb-4">
+        <div class="col-md-5">
+            <label class="form-label fw-bold">Variable Cuantitativa (para Numéricas / BoxPlot):</label>
+            <select name="col_num" class="form-select">
+                {% for col in data.cols_num %}
+                    <option value="{{ col }}" {% if col == data.col_num_sel %}selected{% endif %}>{{ col }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-5">
+            <label class="form-label fw-bold">Variable Cualitativa (para Frecuencias):</label>
+            <select name="col_cat" class="form-select">
+                {% for col in data.cols_cat %}
+                    <option value="{{ col }}" {% if col == data.col_cat_sel %}selected{% endif %}>{{ col }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Filtrar / Calcular</button>
+        </div>
+    </form>
+
+    <div class="row">
+        <div class="col-md-6">
+            <h5>Medidas Estadísticas ({{ data.col_num_sel }})</h5>
+            <ul class="list-group mb-3">
+                <li class="list-group-item d-flex justify-content-between"><span>Conteo (n):</span> <strong>{{ data.stats_num.n }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>Media (Promedio):</span> <strong>{{ data.stats_num.media }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>Mediana:</span> <strong>{{ data.stats_num.mediana }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>Moda:</span> <strong>{{ data.stats_num.moda }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>Mínimo / Máximo:</span> <strong>{{ data.stats_num.min }} / {{ data.stats_num.max }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>Varianza / Desvío Std:</span> <strong>{{ data.stats_num.varianza }} / {{ data.stats_num.std }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>Coeficiente de Variación (CV):</span> <strong>{{ data.stats_num.cv }}%</strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>Rango Intercuartílico (RIC):</span> <strong>{{ data.stats_num.ric }} (Q1: {{ data.stats_num.q1 }}, Q3: {{ data.stats_num.q3 }})</strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>Coeficiente de Asimetría:</span> <strong>{{ data.stats_num.asimetria }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between text-danger"><span>Outliers detectados (1.5*RIC):</span> <strong>{{ data.stats_num.outliers_count }}</strong></li>
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <h5>Histograma y Ojiva Acumulada</h5>
+            <canvas id="chartHist" height="180"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ctx = document.getElementById('chartHist').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ data.chart_hist.labels|safe }},
+            datasets: [{
+                label: 'Frecuencia Absoluta',
+                data: {{ data.chart_hist.frecuencias|safe }},
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% if filtros %}
+<form method="GET" class="card bg-white border-primary p-3 mb-4 shadow-sm">
+    <div class="row g-2 align-items-end">
+        {% if filtros.tiene_edad %}
+        <div class="col-md-2">
+            <label class="form-label small fw-bold mb-1">Edad Mínima</label>
+            <input type="number" name="edad_min" class="form-control form-control-sm" value="{{ filtros.valores_actuales.edad_min }}" min="{{ filtros.edad_min_pob }}" max="{{ filtros.edad_max_pob }}">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small fw-bold mb-1">Edad Máxima</label>
+            <input type="number" name="edad_max" class="form-control form-control-sm" value="{{ filtros.valores_actuales.edad_max }}" min="{{ filtros.edad_min_pob }}" max="{{ filtros.edad_max_pob }}">
+        </div>
+        {% endif %}
+
+        {% if filtros.tiene_sexo %}
+        <div class="col-md-2">
+            <label class="form-label small fw-bold mb-1">Sexo / Género</label>
+            <select name="sexo_filtro" class="form-select form-select-sm">
+                <option value="TODOS">Todos</option>
+                {% for s in filtros.sexos %}
+                    <option value="{{ s }}" {% if filtros.valores_actuales.sexo_filtro == s %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+
+        {% if filtros.tiene_ministerio %}
+        <div class="col-md-4">
+            <label class="form-label small fw-bold mb-1">Ministerio / Área</label>
+            <select name="ministerio_filtro" class="form-select form-select-sm">
+                <option value="TODOS">Todos los ministerios</option>
+                {% for m in filtros.ministerios %}
+                    <option value="{{ m }}" {% if filtros.valores_actuales.ministerio_filtro == m %}selected{% endif %}>{{ m }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary btn-sm w-100">Aplicar Rango</button>
+        </div>
+    </div>
+    <div class="mt-2 small text-muted">
+        Submuestra activa: <strong>{{ filtros.valores_actuales.registros_filtrados }}</strong> de {{ filtros.valores_actuales.registros_totales }} registros totales.
+    </div>
+</form>
+{% endif %}

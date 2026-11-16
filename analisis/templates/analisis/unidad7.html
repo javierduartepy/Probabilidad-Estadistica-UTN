@@ -1,0 +1,73 @@
+{% extends 'analisis/base.html' %}
+{% include 'analisis/includes/barra_filtros.html' %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="h4 text-primary">Unidad 7: Estimación, Pruebas de Hipótesis y Regresión Lineal (TPI Cierre)</h2>
+    <p class="text-muted">Intervalos de confianza clásicos vs Bootstrap, contraste estadístico y modelo lineal por mínimos cuadrados.</p>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card p-3 bg-light">
+                <h5>Estimación de la Media ({{ data.col_sel }})</h5>
+                <p class="mb-1">Media Muestral: <strong>{{ data.media }}</strong></p>
+                <p class="mb-1">IC 90% Clásico: <code>[{{ data.ic90_clasico.0 }}, {{ data.ic90_clasico.1 }}]</code></p>
+                <p class="mb-1">IC 90% Bootstrap (5k): <code>[{{ data.ic90_boot.0 }}, {{ data.ic90_boot.1 }}]</code></p>
+                <p class="mb-1">IC 95% Clásico: <code>[{{ data.ic95_clasico.0 }}, {{ data.ic95_clasico.1 }}]</code></p>
+                <p class="mb-0">IC 95% Bootstrap (5k): <code>[{{ data.ic95_boot.0 }}, {{ data.ic95_boot.1 }}]</code></p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            {% if data.chi2_res %}
+            <div class="card p-3 bg-light">
+                <h5>Prueba de Independencia Chi-Cuadrado</h5>
+                <p class="mb-1">Cruce: <strong>{{ data.chi2_res.var1 }}</strong> vs <strong>{{ data.chi2_res.var2 }}</strong></p>
+                <p class="mb-1">Estadístico Chi2: <strong>{{ data.chi2_res.chi2 }}</strong></p>
+                <p class="mb-1">P-valor: <strong>{{ data.chi2_res.p_valor }}</strong></p>
+                <p class="mb-0">Conclusión: <strong>{% if data.chi2_res.rechaza_h0 %}Se rechaza H0 (Variables Dependientes){% else %}No se rechaza H0 (Independientes){% endif %}</strong></p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if data.regresion %}
+    <div class="row">
+        <div class="col-md-6">
+            <h5>Modelo de Regresion Lineal Simple</h5>
+            <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between"><span>Variable Predictora (X):</span> <strong>{{ data.regresion.x_col }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>Variable Respuesta (Y):</span> <strong>{{ data.regresion.y_col }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>Pendiente (beta_1):</span> <strong>{{ data.regresion.pendiente }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>Ordenada al origen (beta_0):</span> <strong>{{ data.regresion.ordenada }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>Coeficiente de Correlación (r):</span> <strong>{{ data.regresion.r_pearson }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>Coeficiente de Determinación (R²):</span> <strong>{{ data.regresion.r2 }} ({{ data.regresion.r2|floatformat:2 }}%)</strong></li>
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <h5>Gráfico de Dispersión y Recta MCO</h5>
+            <canvas id="chartRegresion" height="180"></canvas>
+        </div>
+    </div>
+    <script>
+        const scatterData = [];
+        const xArr = {{ data.regresion.scatter_x|safe }};
+        const yArr = {{ data.regresion.scatter_y|safe }};
+        for(let i=0; i<xArr.length; i++) { scatterData.push({x: xArr[i], y: yArr[i]}); }
+
+        const lineData = [];
+        const yLine = {{ data.regresion.linea_y|safe }};
+        for(let i=0; i<xArr.length; i++) { lineData.push({x: xArr[i], y: yLine[i]}); }
+
+        new Chart(document.getElementById('chartRegresion').getContext('2d'), {
+            type: 'scatter',
+            data: {
+                datasets: [
+                    { label: 'Datos Reales', data: scatterData, backgroundColor: 'rgba(54, 162, 235, 0.6)' },
+                    { label: 'Recta Regresión MCO', data: lineData, type: 'line', borderColor: 'rgba(255, 99, 132, 1)', pointRadius: 0, borderWidth: 2 }
+                ]
+            },
+            options: { responsive: true }
+        });
+    </script>
+    {% endif %}
+</div>
+{% endblock %}

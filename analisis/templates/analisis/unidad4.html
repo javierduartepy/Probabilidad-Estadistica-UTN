@@ -1,0 +1,53 @@
+{% extends 'analisis/base.html' %}
+{% include 'analisis/includes/barra_filtros.html' %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="h4 text-primary">Unidad 4: Probabilidad Condicional y Clasificador Naive Bayes</h2>
+    <p class="text-muted">Implementación de clasificador bayesiano ingenuo sin librerías externas de machine learning.</p>
+
+    {% if data.error %}
+        <div class="alert alert-danger">{{ data.error }}</div>
+    {% else %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="alert alert-success">
+                    <strong>Variable Objetivo (Target):</strong> <code>{{ data.target_col }}</code> | 
+                    <strong>Variables Predictoras:</strong> <code>{{ data.predictoras|join:", " }}</code> | 
+                    <strong>Precisión del Clasificador (Accuracy):</strong> <strong>{{ data.accuracy }}%</strong> ({{ data.aciertos }} aciertos sobre {{ data.total_evaluados }} registros).
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <h5>Probabilidades a Priori P(C)</h5>
+                <ul class="list-group">
+                    {% for cl, prob in data.priors.items %}
+                    <li class="list-group-item d-flex justify-content-between"><span>Clase {{ cl }}:</span> <strong>{{ prob }}%</strong></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h5>Matriz de Confusión (Real vs Predicho)</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered text-center">
+                        <thead>
+                            <tr><th>Real \ Pred</th>{% for c in data.clases %}<th>{{ c }}</th>{% endfor %}</tr>
+                        </thead>
+                        <tbody>
+                            {% for r_real, preds in data.matriz_confusion.items %}
+                            <tr>
+                                <th class="bg-light">{{ r_real }}</th>
+                                {% for c_pred, val in preds.items %}
+                                <td>{{ val }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

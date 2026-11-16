@@ -1,0 +1,60 @@
+{% extends 'analisis/base.html' %}
+{% include 'analisis/includes/barra_filtros.html' %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="h4 text-primary">Unidad 5: Variables Aleatorias Discretas y Simulación (10.000 Iteraciones)</h2>
+    <p class="text-muted">Modelado de fenómenos discretos (Binomial / Poisson) y contraste empírico computacional.</p>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card bg-light p-3">
+                <p class="mb-1">Fenómeno analizado: <strong>{{ data.evento_desc }}</strong></p>
+                <p class="mb-1">Probabilidad de éxito estimada (p): <strong>{{ data.p_emp }}</strong> | Ensayos (n): <strong>{{ data.n_ensayos }}</strong></p>
+                <p class="mb-0">Esperanza Matemática E(X): <strong>{{ data.esperanza }}</strong> | Varianza V(X): <strong>{{ data.varianza }}</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <h5>Tabla Comparativa (Teórica vs Simulación)</h5>
+            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                <table class="table table-sm table-striped">
+                    <thead>
+                        <tr><th>k (Éxitos)</th><th>Binomial Teórica</th><th>Simulada (10k)</th><th>Poisson Teórica</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for fila in data.tabla_comparativa %}
+                        <tr>
+                            <td>{{ fila.k }}</td>
+                            <td>{{ fila.teorica_binom }}</td>
+                            <td>{{ fila.simulada_emp }}</td>
+                            <td>{{ fila.teorica_poisson }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h5>Gráfico Comparativo de Frecuencias</h5>
+            <canvas id="chartDiscreta" height="160"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ctxD = document.getElementById('chartDiscreta').getContext('2d');
+    new Chart(ctxD, {
+        type: 'bar',
+        data: {
+            labels: {{ data.chart_data.labels|safe }},
+            datasets: [
+                { label: 'Binomial Teórica', data: {{ data.chart_data.teorica|safe }}, backgroundColor: 'rgba(54, 162, 235, 0.6)' },
+                { label: 'Simulada (10.000 iteraciones)', data: {{ data.chart_data.simulada|safe }}, backgroundColor: 'rgba(255, 99, 132, 0.6)' }
+            ]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+</script>
+{% endblock %}

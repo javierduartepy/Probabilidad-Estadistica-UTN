@@ -1,0 +1,53 @@
+{% extends 'analisis/base.html' %}
+{% include 'analisis/includes/barra_filtros.html' %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="h4 text-primary">Unidad 1: Pensamiento estadístico y manejo de datos</h2>
+    <p class="text-muted">Carga nativa (Python lists/dicts), control de nulos, duplicados por ID (CUIL) y rangos lógicos.</p>
+
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card bg-light p-3 mb-3">
+                <h5>Resumen Estructural</h5>
+                <p class="mb-1">Registros totales: <strong>{{ data.n_registros }}</strong></p>
+                <p class="mb-1">Variables totales: <strong>{{ data.n_variables }}</strong></p>
+                <p class="mb-1">Carga nativa exitosa: <strong>{{ data.nativos_count }} registros</strong></p>
+                <p class="mb-1">Duplicados exactos: <span class="badge bg-success">{{ data.duplicados_exactos }}</span></p>
+                <p class="mb-0">Duplicados por ID ({{ data.col_id }}): <span class="badge bg-warning text-dark">{{ data.duplicados_id }}</span></p>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <h5>Diccionario de Variables y Escalas</h5>
+            <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                <table class="table table-sm table-striped">
+                    <thead>
+                        <tr><th>Variable</th><th>Tipo (Dtype)</th><th>Escala Supuesta</th><th>Únicos</th><th>Ejemplos</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for v in data.diccionario_vars %}
+                        <tr>
+                            <td><code>{{ v.nombre }}</code></td>
+                            <td>{{ v.dtype }}</td>
+                            <td><span class="badge bg-secondary">{{ v.escala }}</span></td>
+                            <td>{{ v.unicos }}</td>
+                            <td><small class="text-muted">{{ v.ejemplos }}</small></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% if data.alerta_edad %}
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="alert alert-info">
+                <strong>Auditoría de Rango Etario:</strong> Mínimo detectado: {{ data.alerta_edad.min }} años | Máximo detectado: {{ data.alerta_edad.max }} años | 
+                Mayores de 70 años: {{ data.alerta_edad.fuera_rango_70 }} registros | Menores de 21 años: {{ data.alerta_edad.menores_21 }} registros.
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

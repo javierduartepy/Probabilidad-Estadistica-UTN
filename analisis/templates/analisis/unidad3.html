@@ -1,0 +1,44 @@
+{% extends 'analisis/base.html' %}
+{% include 'analisis/includes/barra_filtros.html' %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="h4 text-primary">Unidad 3: Análisis Combinatorio y Conteo</h2>
+    <p class="text-muted">Variaciones, permutaciones y combinaciones aplicadas a problemas de programación y al dataset.</p>
+
+    <form method="GET" class="row g-3 bg-light p-3 rounded mb-4">
+        <div class="col-md-5">
+            <label class="form-label fw-bold">Total de elementos (n):</label>
+            <input type="number" name="n" class="form-control" value="{{ data.interactivo.n }}" min="1" max="50">
+        </div>
+        <div class="col-md-5">
+            <label class="form-label fw-bold">Elementos a seleccionar (r):</label>
+            <input type="number" name="r" class="form-control" value="{{ data.interactivo.r }}" min="1" max="20">
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Calcular Conteo</button>
+        </div>
+    </form>
+
+    <div class="row">
+        <div class="col-md-6">
+            <h5>Resultados Interactivos (n={{ data.interactivo.n }}, r={{ data.interactivo.r }})</h5>
+            <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between"><span>Permutaciones Simples (P_n):</span> <strong>{{ data.interactivo.perm_simple }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>Variaciones Simples V(n,r):</span> <strong>{{ data.interactivo.var_simple }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>Variaciones con Repetición VR(n,r):</span> <strong>{{ data.interactivo.var_rep }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>Combinaciones Simples C(n,r):</span> <strong>{{ data.interactivo.comb_simple }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>Combinaciones con Repetición CR(n,r):</span> <strong>{{ data.interactivo.comb_rep }}</strong></li>
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-secondary text-white p-3">
+                <h5>Aplicación al Dataset Real</h5>
+                <p class="mb-1">Registros totales analizados: <strong>{{ data.dataset_comb.total_registros }}</strong></p>
+                <p class="mb-1">Comités de 3 funcionarios (sin orden): <strong>{{ data.dataset_comb.comite_3_sin_orden }}</strong></p>
+                <p class="mb-1">Ministerios distintos detectados: <strong>{{ data.dataset_comb.n_ministerios }}</strong></p>
+                <p class="mb-0">Combinaciones de 3 ministerios: <strong>{{ data.dataset_comb.comb_ministerios_3 }}</strong></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
