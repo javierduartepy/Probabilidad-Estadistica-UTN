@@ -1,3 +1,4 @@
+'''text
 tpi_estadistica_django/
 ├── manage.py
 ├── requirements.txt
